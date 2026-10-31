@@ -1,0 +1,22 @@
+{
+  "short_name": "ExcelToPDF",
+  "name": "Excel to PDF — Local Offline PWA",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#F8FAFC",
+  "theme_color": "#107C41",
+  "display": "standalone",
+  "orientation": "any",
+  "description": "Konversi dokumen Microsoft Excel (.xlsx, .xls, .xlsm) menjadi PDF secara 100% lokal dan offline di perangkat Anda."
+}

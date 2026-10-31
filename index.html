@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="theme-color" content="#107C41">
+  <meta name="description" content="Konversi file Excel (.xlsx, .xls, .xlsm) ke PDF secara lokal, aman, dan offline menggunakan WebAssembly.">
+  
+  <title>Excel to PDF — Local Offline PWA</title>
+  
+  <!-- Manifest PWA -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/responsive.css">
+</head>
+<body>
+
+  <!-- Screen Reader Live Region Announcer -->
+  <div id="sr-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- APP HEADER BAR -->
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="brand-logo" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="8" y1="13" x2="16" y2="13"></line>
+          <line x1="8" y1="17" x2="16" y2="17"></line>
+        </svg>
+      </div>
+      <h1 class="brand-title">Excel to PDF</h1>
+    </div>
+
+    <div class="header-status">
+      <!-- Badge Status Offline -->
+      <span id="sw-status-badge" class="status-badge status-warning" role="status" aria-label="Status Offline">
+        <span class="status-dot"></span>
+        <span class="status-text">Persiapan Offline</span>
+      </span>
+
+      <!-- Tombol Diagnostik Header -->
+      <button id="btn-header-diag" class="icon-btn" aria-label="Buka Diagnostik Sistem" title="Diagnostik Sistem">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN NAVIGATION TABS -->
+  <nav class="app-nav" aria-label="Navigasi Utama">
+    <div class="nav-container">
+      <button class="nav-tab active" data-tab="tab-dashboard" role="tab" aria-selected="true" aria-controls="tab-dashboard">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="3" y1="9" x2="21" y2="9"></line>
+          <line x1="9" y1="21" x2="9" y2="9"></line>
+        </svg>
+        <span>Konversi</span>
+      </button>
+
+      <button class="nav-tab" data-tab="tab-history" role="tab" aria-selected="false" aria-controls="tab-history">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span>Riwayat</span>
+      </button>
+
+      <button class="nav-tab" data-tab="tab-diagnostics" role="tab" aria-selected="false" aria-controls="tab-diagnostics">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+        </svg>
+        <span>Diagnostik</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN WORKSPACE CONTENT -->
+  <main class="app-content">
+
+    <!-- TAB 1: DASHBOARD KONVERSI (BATCH WORKSPACE) -->
+    <section id="tab-dashboard" class="tab-panel active" role="tabpanel">
+      <div class="dashboard-grid">
+        
+        <!-- KOLOM KIRI / UTAMA: DROPZONE & CONFIG -->
+        <div class="grid-col main-col">
+          
+          <!-- Dropzone Input -->
+          <div id="dropzone" class="dropzone-card" tabindex="0" role="button" aria-label="Pilih atau seret file Excel ke sini">
+            <input type="file" id="file-input" accept=".xlsx,.xls,.xlsm" multiple class="file-input-hidden" aria-hidden="true">
+            <div class="dropzone-content">
+              <div class="dropzone-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </div>
+              <p class="dropzone-text">Pilih satu atau beberapa file Excel, atau seret ke sini</p>
+              <p class="dropzone-subtext">Mendukung format .xlsx, .xls, dan .xlsm. Pemrosesan 100% lokal.</p>
+              <button type="button" class="btn btn-secondary btn-touch" id="btn-browse-file">Pilih File Excel</button>
+            </div>
+          </div>
+
+          <!-- Configuration Panel -->
+          <div id="config-panel" class="card config-card disabled-state mt-16">
+            <h2 class="card-title">Pengaturan Konversi</h2>
+            <p class="card-subtitle">Pilih file terlebih dahulu untuk mengaktifkan pengaturan.</p>
+            
+            <!-- Radios Mode Konversi -->
+            <div class="form-group mt-16">
+              <label class="form-label">Mode Konversi PDF:</label>
+              <div class="radio-group">
+                <label class="radio-card">
+                  <input type="radio" name="conversion-mode" value="mode1" checked disabled>
+                  <div class="radio-content">
+                    <span class="radio-title">Mode 1: Semua Sheet jadi 1 PDF</span>
+                    <span class="radio-desc">Seluruh worksheet normal digabung ke dalam 1 dokumen PDF.</span>
+                  </div>
+                </label>
+
+                <label class="radio-card">
+                  <input type="radio" name="conversion-mode" value="mode2" disabled>
+                  <div class="radio-content">
+                    <span class="radio-title">Mode 2: Sheet Pilihan jadi 1 PDF</span>
+                    <span class="radio-desc">Hanya worksheet yang dicentang yang digabung ke 1 PDF.</span>
+                  </div>
+                </label>
+
+                <label class="radio-card">
+                  <input type="radio" name="conversion-mode" value="mode3" disabled>
+                  <div class="radio-content">
+                    <span class="radio-title">Mode 3: Setiap Sheet jadi PDF Terpisah</span>
+                    <span class="radio-desc">Masing-masing worksheet menghasilkan file PDF tersendiri.</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- KOLOM KANAN / PENDUKUNG: ANTREAN BATCH & CONTROLS -->
+        <div class="grid-col side-col">
+          <div class="card batch-card">
+            <div class="card-header-flex">
+              <h2 class="card-title">Antrean Multi-File</h2>
+              <span id="queue-count-badge" class="badge badge-gray">0 File</span>
+            </div>
+
+            <div id="queue-container" class="queue-list mt-12">
+              <div class="empty-state">
+                <p>Belum ada file dalam antrean.</p>
+              </div>
+            </div>
+
+            <!-- Global Action Controls -->
+            <div class="action-stack mt-16">
+              <button id="btn-start-batch" class="btn btn-primary btn-touch w-full" disabled>
+                🚀 Mulai Konversi Semua
+              </button>
+              <button id="btn-download-zip" class="btn btn-secondary btn-touch w-full mt-8" disabled>
+                📦 Unduh Semua (.ZIP)
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 2: RIWAYAT WORKSPACE & STORAGE -->
+    <section id="tab-history" class="tab-panel" role="tabpanel" hidden>
+      <div class="card storage-info-card">
+        <h2 class="card-title">Kapasitas Penyimpanan Lokal Browser</h2>
+        <div class="storage-bar-wrapper mt-12">
+          <div id="storage-bar" class="storage-bar-fill" style="width: 0%;"></div>
+        </div>
+        <div class="storage-meta mt-8">
+          <span id="storage-used-text">Penggunaan Aplikasi: -- MB</span>
+          <span id="storage-quota-text">Estimasi Kuota: -- GB</span>
+        </div>
+        <p class="text-muted mt-8">* Angka kuota adalah estimasi browser dan bukan jaminan ruang disk fisik.</p>
+        <button id="btn-clear-storage" class="btn btn-danger-outline btn-touch mt-12">
+          🧹 Bersihkan File Sementara
+        </button>
+      </div>
+
+      <div class="card mt-16">
+        <h2 class="card-title">Log Riwayat Konversi</h2>
+        <div id="history-container" class="history-list mt-12">
+          <div class="empty-state">
+            <p>Belum ada riwayat konversi tercatat.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: INFORMASI & DIAGNOSTIK BROWSER -->
+    <section id="tab-diagnostics" class="tab-panel" role="tabpanel" hidden>
+      <div class="card">
+        <h2 class="card-title">Diagnostik Kompatibilitas Environment</h2>
+        <p class="card-subtitle">Hasil pemeriksaan dukungan API browser dan isolasi memori secara langsung.</p>
+
+        <div class="table-responsive mt-16">
+          <table class="diag-table">
+            <thead>
+              <tr>
+                <th>Komponen / API System</th>
+                <th>Status Evaluasi</th>
+                <th>Keterangan Technical</th>
+              </tr>
+            </thead>
+            <tbody id="diag-table-body">
+              <!-- Render via app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL 1: PRATINJAU PDF INTERAKTIF (PDF.JS CANVAS) -->
+  <div id="modal-preview" class="modal-backdrop" aria-hidden="true" tabIndex="-1">
+    <div class="modal-dialog modal-lg" role="dialog" aria-labelledby="modal-preview-title">
+      <div class="modal-header">
+        <h3 id="modal-preview-title" class="modal-title">Pratinjau PDF</h3>
+        <button class="icon-btn modal-close" onclick="PDFPreview.closePreview()" aria-label="Tutup Pratinjau">&times;</button>
+      </div>
+
+      <!-- Toolbar Navigasi Halaman & Zoom -->
+      <div class="preview-toolbar">
+        <div class="toolbar-group">
+          <button class="btn btn-secondary btn-touch" onclick="PDFPreview.prevPage()">◀ Sebelumnya</button>
+          <span id="preview-page-count" class="toolbar-text">Halaman 1 dari 1</span>
+          <button class="btn btn-secondary btn-touch" onclick="PDFPreview.nextPage()">Berikutnya ▶</button>
+        </div>
+        <div class="toolbar-group">
+          <button class="btn btn-secondary btn-touch" onclick="PDFPreview.zoomOut()">[-] Zoom</button>
+          <button class="btn btn-secondary btn-touch" onclick="PDFPreview.zoomIn()">[+] Zoom</button>
+        </div>
+      </div>
+
+      <!-- Canvas Area Render PDF.js -->
+      <div class="modal-body canvas-container">
+        <canvas id="pdf-canvas"></canvas>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-touch" onclick="PDFPreview.closePreview()">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DIAGNOSTIK DETAIL OVERLAY -->
+  <div id="modal-diag" class="modal-backdrop" aria-hidden="true" tabIndex="-1">
+    <div class="modal-dialog" role="dialog" aria-labelledby="modal-diag-title">
+      <div class="modal-header">
+        <h3 id="modal-diag-title" class="modal-title">Diagnostik Sistem Detail</h3>
+        <button class="icon-btn modal-close" aria-label="Tutup Modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Aplikasi berjalan secara 100% lokal di browser pengguna tanpa mengirim dokumen ke server eksternal.</p>
+        <div id="modal-diag-content" class="mt-12"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-close btn-touch">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Vendor Libraries (Strict Local Copy) -->
+  <script src="lib/sheetjs/xlsx.full.min.js"></script>
+  <script src="lib/pdflib/pdf-lib.min.js"></script>
+  <script src="lib/pdfjs/pdf.min.js"></script>
+  <script src="lib/jszip/jszip.min.js"></script>
+
+  <!-- Application Modules -->
+  <script src="js/file-manager.js"></script>
+  <script src="js/workbook-manager.js"></script>
+  <script src="js/pdf-stitcher.js"></script>
+  <script src="js/conversion-manager.js"></script>
+  <script src="js/database/storage-manager.js"></script>
+  <script src="js/pdf-preview.js"></script>
+  <script src="js/zip-manager.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
